@@ -12,10 +12,20 @@ export const downloadEpisode = async (context, url, quality, audio) => {
     const modal = page.locator("#downloadModal");
     await modal.waitFor({ state: "visible" });
 
+    const downloadPromise = context.waitForEvent("download", {
+      timeout: 30000,
+    });
+
     console.log("Starting Download");
     await modal
       .locator("a.dl-bubble-item", { hasText: Quality.toString(quality) })
       .click();
+
+    const download = await downloadPromise;
+
+    const path = `/home/${process.env.USER}/Downloads/${download.suggestedFilename()}`;
+    await download.saveAs(path);
+    console.log(`Success: ${path}`);
 
     await page.close();
   } catch (error) {
